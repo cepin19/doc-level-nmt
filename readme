@@ -1,5 +1,5 @@
-first, we get hashes of "source line + target line" from the smaller, 80M file - paracrawl.langid, and match then with scores
-python3 hash.py
+first, we get hashes of "source line + target line" from the smaller, 72M lines file - paracrawl.langid, and match them with scores
+python3 hash.py paracrawl.langid.scored
 
 then we need to match hashes from smaller file with lines from the whole corpus and add scores to the corresponding lines
 python3 match_hashes.py

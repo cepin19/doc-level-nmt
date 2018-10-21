@@ -1,0 +1,50 @@
+first, we get hashes of "source line + target line" from the smaller, 80M file - paracrawl.langid, and match then with scores
+python3 hash.py
+
+then we need to match hashes from smaller file with lines from the whole corpus and add scores to the corresponding lines
+python3 match_hashes.py
+
+Catarina's magic > big_hashes.filtered-50perc-full.gz
+
+
+First we split sentences which are on the same line in the filtered files:
+#python3 split_sent.py filtered_documents.gz  > filtered_splitted.out 2>mismatch
+python3 split_sent.py big_hashes.filtered-50perc-full.gz > filtered_splitted_full.out 2> mismatch
+
+more advanced sentence splitting:
+python3 split_sent_align.py big_hashes.filtered-50perc-full.gz > filtered_splitted_full_aligned.out 2> realign
+uses hunalign to align documents with lines that have unbalanced numbers of sentences, only outputs aligned sentences.
+When it makes a hole (skipping some source sentence) in a document, the script prepends token <SKIP> in front of first sentence after the hole - so we know we should not use context from the previous sentence.
+
+
+
+!In this step, we should remove boilerplate and general rubbish somehow!
+python3 remove_junk.py filtered_splitted_full.out > filtered_splitted_full_clean.out 2> avg_len
+
+Also we can get just the documents that have high average domain score:
+python3 get_indomain.py filtered_splitted_full_clean.out 0.5 > filtered_splitted_full_clean_domain0.5.out 2> low_scoring
+
+Now we split them into dev (first 100 docs), test (next 100) and train (rest) sets:
+#python3 split_train_dev_test.py filtered_splitted_clean.out small
+#python3 split_train_dev_test.py filtered_splitted_clean.out full
+
+
+finally, we can create a tab separated files (train_small.tab,dev_small.tabs,test_small.tabs) with three columns:
+Previous source sentence	source sentence		target sentence
+
+python3 prepare_dual_encoder.py  train_full.tabs  > train_full.corp
+python3 prepare_dual_encoder.py  dev_full.tabs > dev_full.corp
+python3 prepare_dual_encoder.py  test_full.tabs > test_full.corp
+
+now we can separate the columns:
+cut -f 1 train_full.corp > marian/corp/train_full.en.shifted.snt
+cut -f 2 train_full.corp > marian/corp/train_full.en.snt
+cut -f 3 train_full.corp > marian/corp/train_full.de.snt
+
+and so on...
+
+todo: remove boilerplate stuff, e.g. grep Limousine train_small.de.tcs 
+grep  -c "schmiedmann.de" filtered_splitted.out -> more than 1/2 of the filtered corpus is a car dealer e-shop
+maybe detect extremely long documents and discard them? Doesn't solve the problem above, the e-shop is split in many short documents
+also we can do filtering by domain score, but domain score of the car names is pretty high
+maybe we should get the average sentence length in document and discard documents that only have very short sentences

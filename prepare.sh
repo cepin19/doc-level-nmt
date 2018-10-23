@@ -8,8 +8,8 @@ gzip -d  corpus.gz
 # train baseline models in both directions
 
 
-
-# train LM on news commentary and webidnes
+wget http://data.statmt.org/wmt18/translation-task/news.2017.cs.shuffled.deduped.gz
+# train LM on news2017 1M sample
 # cd LM/news; ./preprocess.sh;  ./train.sh
 
 # train LM on randomly sampled 1M lines

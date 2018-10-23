@@ -15,3 +15,7 @@ gzip -d  corpus.gz
 # train LM on randomly sampled 1M lines
 # cd LM/paracrawl; ./preprocess.sh;  ./train.sh
 
+bash score_encs.sh
+bash score_csen.sh
+bash score_news.lm.sh
+bash score_paracrawl.lm.sh

@@ -39,6 +39,6 @@ with open("coherence-cohesion.json") as cctest, open("coherence-cohesion.europar
             incorrectOpensub.write(preprocess(example["trg"]["incorrect"][1],"tgt")[1])
 
             correctEuroparl.write(preprocess(example["trg"]["correct"][1],"tgt")[0])
-            correctOpensub.write(preprocess(example["trg"]["correct"][1],"tgt")[])
+            correctOpensub.write(preprocess(example["trg"]["correct"][1],"tgt")[1])
 
         examples.append(ccexamples[i]["type"])

@@ -28,6 +28,7 @@ for i in range(context_len_tgt + 1):
 with open(fn) as input, open("%s.%s"%(fn,src),'w') as srcf, open("%s.%s"%(fn,tgt),'w') as tgtf, open("%s.%s.tcs"%(fn,src),'w') as srcf_tcs, open("%s.%s.tcs"%(fn,tgt),'w') as tgtf_tcs :
     for line in input:
         #print (line)
+        #TODO osetrit vyskyty tokenu <context> ve vstupnich datech???
         if not line.startswith("<docstart id") and not line.startswith("<docend id"):
             try:
                 # the order is switched in my input file, I will definitely be confused with this later

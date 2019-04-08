@@ -1,11 +1,17 @@
 import json,subprocess
 from lutils import prepost
-src="fr"
-tgt="en"
+src="en"
+tgt="fr"
 marian_path=""
 #load tokenizers, truecasers and bpe models
-tok_src=prepost.Tokenizer(src)
-tok_tgt=prepost.Tokenizer(tgt)
+src_src_context=1
+src_tgt_context=0
+tgt_tgt_context=0
+basename="coherence-cohesion"
+basename="disambig.cs"
+
+tok_src=prepost.Tokenizer(src+" -a -no-escape")
+tok_tgt=prepost.Tokenizer(tgt+" -a -no-escape")
 
 true_src=prepost.TrueCaserMoses("/home/big_maggie/data/corp/tcs_models/truecase-model.%s"%src)
 true_tgt=prepost.TrueCaserMoses("/home/big_maggie/data/corp/tcs_models/truecase-model.%s"%tgt)
@@ -23,22 +29,37 @@ def score(config,src,correct,incorrect):
     subprocess.call("{0}/marian-scorer -c {1} -t {2} {3}".format(marian_path,config,src,correct))
     subprocess.call("{0}/marian-scorer -c {1} -t {2} {3}".format(marian_path,config,src,incorrect))
 
-with open("coherence-cohesion.json") as cctest, open("coherence-cohesion.europarl.src","w") as srcEuroparl,open("coherence-cohesion.europarl.opensub.src","w") as srcOpensub, open("coherence-cohesion.europarl.correct","w") as correctEuroparl,open("coherence-cohesion.opensub.correct","w") as correctOpensub, open("coherence-cohesion.europarl.incorrect","w") as incorrectEuroparl, open("coherence-cohesion.opensub.incorrect","w") as incorrectOpensub:
+with open("%s.json"%basename) as cctest, open("%s.europarl.src"%basename,"w") as srcEuroparl,open("%s.opensub.src"%basename,"w") as srcOpensub,  open("%s.europarl.src1tgt1"%basename,"w") as src1tgt1Europarl,open("%s.opensub.src1tgt1"%basename,"w") as src1tgt1Opensub,  open("%s.europarl.nocontext.src"%basename,"w") as srcEuroparlNoC,open("%s.opensub.nocontext.src"%basename,"w") as srcOpensubNoC,  open("%s.europarl.correct"%basename,"w") as correctEuroparl,open("%s.opensub.correct"%basename,"w") as correctOpensub, open("%s.europarl.incorrect"%basename,"w") as incorrectEuroparl, open("%s.opensub.incorrect"%basename,"w") as incorrectOpensub:
     ccexamples=json.load(cctest)
     for i in ccexamples:
         print("Example %s:\n"%i)
+        print (ccexamples[i])
+        if "type" in ccexamples[i]:
+            type=ccexamples[i]["type"]
+        else:
+            type="unk"
         for example in ccexamples[i]["examples"]:
-            print(example)
-            print (example["src"])
-            print (example["trg"]["incorrect"])
-            print (example["trg"]["correct"])
+            #print(example)
+            #print (example["src"])
+            #print (example["trg"]["incorrect"])
+            #print (example["trg"]["correct"])
             #srcText=#tuple (europarl, opensub), different BPE
-            srcEuroparl.write(" <context> ".join((preprocess(example["src"][0],"src")[0],preprocess(example["src"][1],"src")[0])))
-            srcOpensub.write(" <context> ".join((preprocess(example["src"][0],"src")[1],preprocess(example["src"][1],"src")[1])))
-            incorrectEuroparl.write(preprocess(example["trg"]["incorrect"][1],"tgt")[0])
-            incorrectOpensub.write(preprocess(example["trg"]["incorrect"][1],"tgt")[1])
+	    #TODO tgt context
+            if type=="disambig":
+                srcEuroparl.write(" <context> ".join([preprocess(example["src"][0],"src")[0], preprocess(example["src"][1],"src")[0]])+'\n')
+#            srcOpensub.write(" <context> ".join([preprocess(example["src"][i],"src")[1] for i in range(0,src_src_context+1)])+'\n')
+                srcOpensub.write(" <context> ".join([preprocess(example["src"][0],"src")[1], preprocess(example["src"][1],"src")[1]])+'\n')
 
-            correctEuroparl.write(preprocess(example["trg"]["correct"][1],"tgt")[0])
-            correctOpensub.write(preprocess(example["trg"]["correct"][1],"tgt")[1])
+                src1tgt1Europarl.write(" <context> ".join([preprocess(example["trg"]["correct"][0],"tgt")[0],preprocess(example["src"][0],"src")[0], preprocess(example["src"][1],"src")[0]])+'\n')
+                src1tgt1Opensub.write(" <context> ".join([preprocess(example["trg"]["correct"][0],"tgt")[1],preprocess(example["src"][0],"src")[1], preprocess(example["src"][1],"src")[1]])+'\n')
 
-        examples.append(ccexamples[i]["type"])
+                srcOpensubNoC.write(preprocess(example["src"][1],"src")[1]+'\n')
+                srcEuroparlNoC.write(preprocess(example["src"][1],"src")[0]+'\n')
+
+                incorrectEuroparl.write(preprocess(example["trg"]["incorrect"][1],"tgt")[0]+'\n')
+                incorrectOpensub.write(preprocess(example["trg"]["incorrect"][1],"tgt")[1]+'\n')
+
+                correctEuroparl.write(preprocess(example["trg"]["correct"][1],"tgt")[0]+'\n')
+                correctOpensub.write(preprocess(example["trg"]["correct"][1],"tgt")[1]+'\n')
+
+        examples.append(type)
